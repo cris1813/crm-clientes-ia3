@@ -1,0 +1,8 @@
+{
+  "name": "crm-ia-backend",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "openai": "latest"
+  }
+}

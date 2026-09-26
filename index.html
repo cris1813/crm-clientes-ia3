@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CRM Clientes</title>
+<style>
+:root{--bg:#f4f5f7;--cd:#fff;--tx:#1b1f24;--mu:#66707a;--bd:#dde1e6;--ac:#0b6e4f;--wa:#1fa855;--rd:#c62828;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111417;--cd:#1c2126;--tx:#e8ebee;--mu:#98a2ac;--bd:#2c343b;--ac:#4cc39b;--rd:#ef7b7b}}
+:root[data-theme="dark"]{--bg:#111417;--cd:#1c2126;--tx:#e8ebee;--mu:#98a2ac;--bd:#2c343b;--ac:#4cc39b;--rd:#ef7b7b}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.4 system-ui,-apple-system,Roboto,sans-serif}
+header{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding:10px 12px 6px;z-index:5}
+h1{font-size:18px;margin:0;display:flex;justify-content:space-between;align-items:center;gap:8px}
+h1 small{font-weight:400;color:var(--mu);font-size:13px}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--cd);color:var(--tx);font:inherit}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:8px 0 2px}
+.chip{flex:none;padding:7px 12px;border-radius:99px;border:1px solid var(--bd);background:var(--cd);color:var(--tx);font:inherit;font-size:13px}
+.chip.on{background:var(--ac);color:var(--bg);border-color:var(--ac)}
+main{padding:4px 12px 90px;max-width:720px;margin:auto}
+.card{background:var(--cd);border:1px solid var(--bd);border-radius:14px;padding:12px;margin:8px 0}
+.top{display:flex;justify-content:space-between;gap:8px}
+.nm{font-weight:600}.rut,.mu{color:var(--mu);font-size:12px}
+.tag{font-size:11px;padding:2px 8px;border-radius:99px;border:1px solid var(--bd);color:var(--mu);height:fit-content;white-space:nowrap}
+.nt{margin:6px 0;font-size:14px}
+.row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.b{padding:10px 14px;border-radius:10px;border:1px solid var(--bd);background:var(--cd);color:var(--tx);font:inherit;font-size:14px;text-decoration:none;min-height:40px;display:inline-flex;align-items:center}
+.b.w{background:var(--wa);border-color:var(--wa);color:#fff;font-weight:600}
+.b.p{background:var(--ac);border-color:var(--ac);color:var(--bg);font-weight:600}
+.b.d{color:var(--rd);border-color:var(--rd)}
+.warn{color:var(--rd);font-size:12px}
+.em{text-align:center;color:var(--mu);margin-top:40px}
+.fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:56px;height:56px;border-radius:50%;border:0;background:var(--ac);color:var(--bg);font-size:28px;box-shadow:0 3px 10px #0005}
+.ov{position:fixed;inset:0;background:#0009;z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.ov[hidden]{display:none}
+.sh{background:var(--bg);width:100%;max-width:720px;max-height:92%;overflow-y:auto;border-radius:18px 18px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom,0px))}
+label{display:block;font-size:12px;color:var(--mu);margin:10px 0 3px}
+.h{font-size:12px;border-top:1px solid var(--bd);padding:5px 0}.h b{color:var(--mu);font-weight:500}
+
+.ai-card{background:linear-gradient(135deg,rgba(11,110,79,.12),rgba(76,195,155,.08));border:1px solid var(--ac);border-radius:14px;padding:12px;margin:8px 0}.ai-title{font-weight:700;font-size:16px}.ai-score{font-size:28px;font-weight:800;color:var(--ac)}.ai-muted{color:var(--mu);font-size:12px}.ai-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ai-stat{background:var(--cd);border:1px solid var(--bd);border-radius:12px;padding:10px}.ai-list{margin:6px 0 0;padding-left:18px}.ai-loading{padding:18px;text-align:center;color:var(--mu)}
+</style></head><body>
+<header>
+<h1>📇 Clientes <small id="cnt"></small><button class="b" id="bkb">Respaldo</button></h1>
+<div class="chips" id="tabs"></div>
+<input id="q" type="search" placeholder="Buscar nombre, RUT, teléfono o nota…" style="margin-top:8px">
+<div class="chips" id="chips"></div><div class="mu" id="st" style="padding-top:2px"></div>
+</header>
+<main id="list"></main>
+<button class="fab" id="add" aria-label="Nuevo cliente">+</button>
+
+<div class="ov" id="ed" hidden><div class="sh">
+<h1 id="et">Cliente</h1>
+<label>Nombre / Razón social</label><input id="n">
+<label>RUT</label><input id="r">
+<label>Teléfono(s) — separa con " / "</label><input id="t" inputmode="tel">
+<label>Categoría</label><select id="c"></select>
+<label>¿Qué suele comprar? / Notas</label><textarea id="o" rows="4"></textarea>
+<label>Frecuencia de compra</label><select id="fq"><option value="">Sin definir</option><option value="7">Semanal</option><option value="15">Quincenal</option><option value="30">Mensual</option><option value="45">Cada 45 días</option></select>
+<label>Próximo seguimiento</label><input id="f" type="date">
+<div class="row"><button class="b p" id="sv">Guardar</button><button class="b" id="cx">Cerrar</button><button class="b d" id="dl">Eliminar</button></div>
+<div id="ex"><label>💰 Compras</label>
+<div class="row" style="margin-top:0"><input id="pd" type="date" style="flex:1 1 130px"><input id="pm" type="number" inputmode="numeric" placeholder="Monto $" style="flex:1 1 110px"></div>
+<input id="pt" placeholder="Detalle (ej. 10 pallets papel)" style="margin-top:6px"><button class="b p" id="pa" style="margin-top:6px">Agregar compra</button><div id="pl"></div>
+<label>✅ Pendientes</label><div class="row" style="margin-top:0"><input id="kd" type="date" style="flex:1 1 130px"><input id="kt" placeholder="Qué hay que hacer" style="flex:2 1 160px"></div><button class="b p" id="ka" style="margin-top:6px">Agregar pendiente</button><div id="kl"></div>
+<label>📝 Bitácora interna</label>
+<select id="bs"><option>Llamada</option><option>WhatsApp</option><option>Visita</option><option>Nota</option></select>
+<textarea id="bn" rows="2" placeholder="¿Qué se habló o acordó?" style="margin-top:6px"></textarea><button class="b p" id="ba" style="margin-top:6px">Agregar a bitácora</button></div>
+<label>Historial (cambios, compras y bitácora)</label><div id="hs"></div>
+</div></div>
+
+<div class="ov" id="bk" hidden><div class="sh">
+<h1>Respaldo</h1>
+<p class="mu">Tus datos se guardan en este navegador. Copia el respaldo y guárdalo (ej. en WhatsApp a ti mismo). Para restaurar, pégalo abajo.</p>
+<textarea id="bt" rows="8"></textarea>
+<div class="row"><button class="b p" id="bc">Copiar</button><button class="b" id="bd">⬇ Descargar</button><button class="b" id="br">Restaurar</button><button class="b" id="bx">Cerrar</button></div>
+<div class="row"><button class="b" id="c1">📊 Excel: clientes</button><button class="b" id="c2">📊 Excel: compras</button></div><label>Restaurar desde archivo .json</label><input type="file" id="bf" accept=".json"><p class="mu" id="bm"></p>
+</div></div>
+
+<div class="ov" id="im" hidden><div class="sh"><h1>📷 Importar lista de precios</h1>
+<p class="mu">1) Abre la foto de la lista en tu Galería o Google Fotos. 2) Toca "Copiar texto" (o Lens / "Extraer texto"). 3) Pégalo aquí. También sirve texto de Excel o WhatsApp.</p>
+<input type="file" id="if" accept="image/*"><textarea id="it" rows="6" style="margin-top:8px" placeholder="Pega aquí el texto de la lista…"></textarea>
+<button class="b p" id="ia" style="margin-top:8px">Ordenar productos</button><div id="ir"></div>
+<div class="row"><button class="b p" id="is" style="display:none">Guardar en catálogo</button><button class="b" id="ix">Cerrar</button></div></div></div>
+<div class="ov" id="sw" hidden><div class="sh"><h1>📤 Compartir lista de precios</h1>
+<p class="mu">Edita el texto si quieres quitar productos.</p><textarea id="sm" rows="12"></textarea>
+<div class="row"><a class="b w" id="sg" target="_blank" rel="noopener" href="#">Enviar por WhatsApp</a><button class="b" id="sc">Copiar</button><button class="b" id="sx2">Cerrar</button></div><p class="mu" id="sn"></p></div></div>
+<div class="ov" id="pe" hidden><div class="sh"><h1>Cotización / pedido</h1>
+<label>Cliente</label><select id="pc"></select>
+<label>Tipo</label><select id="pk"><option>Cotización</option><option>Pedido</option></select>
+<label>Producto</label><input id="ln" list="dlp" placeholder="Escribe o elige del catálogo"><datalist id="dlp"></datalist>
+<div class="row" style="margin-top:6px"><input id="lq" type="number" inputmode="numeric" placeholder="Cant." style="flex:1 1 70px"><input id="lp" type="number" inputmode="numeric" placeholder="Precio unit. $" style="flex:2 1 110px"></div>
+<button class="b" id="la" style="margin-top:6px">+ Agregar línea</button><div id="ll"></div><div class="nm" id="lt"></div>
+<div class="row"><button class="b p" id="pg">Guardar</button><button class="b" id="pq">Cancelar</button></div></div></div>
+<script>
+const CATS={A:'Abarrotes y Alimentos',P:'Aseo y Papel',F:'Feria',M:'Mayoristas / Surtido',X:'Pendientes'};
+const D=[];
+const K='crm_clientes_v1',$=s=>document.querySelector(s);
+const AND=window.Android;
+if(AND&&!localStorage.getItem(K)){try{const o=JSON.parse(AND.loadBackup());if(o&&o.c){localStorage.setItem(K,JSON.stringify(o.c));localStorage.setItem('crm_extra_v1',JSON.stringify(o.x||{cat:[],ped:[]}))}}catch(e){}}
+const bk=()=>{try{AND&&AND.saveBackup(JSON.stringify({c:S,x:X}))}catch(e){}};
+function dl(n,m,t){if(AND){AND.saveFile(n,m,t);return}const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:m}));a.download=n;a.click()}
+function cp(t){if(AND){AND.copy(t);return Promise.resolve()}return navigator.clipboard.writeText(t)}
+let S=load(),q='',cat='all',cur=0,armed=false;
+function load(){try{const s=localStorage.getItem(K);if(s)return JSON.parse(s).map(x=>({p:[],k:[],fq:'',...x}))}catch(e){}
+return D.map((r,i)=>({id:i+1,c:r[0],r:r[1],n:r[2],t:r[3],o:r[4],f:'',l:'',p:[],k:[],fq:'',h:[['Inicio','Importado del Excel']]}))}
+function save(){try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}bk()}
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const norm=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+const today=()=>new Date().toISOString().slice(0,10);
+const fmt=d=>d.split('-').reverse().slice(0,2).join('/');
+const ts=()=>new Date().toLocaleString('es-CL',{dateStyle:'short',timeStyle:'short'});
+const nums=t=>(t||'').split(/[\/,;]/).map(x=>x.replace(/\D/g,'')).filter(x=>x.length>=7);
+const ok=n=>n.length==9||(n.length==11&&n.startsWith('56'));
+const wa=n=>n.length==9?'56'+n:n;
+function log(x,t){x.h.unshift([ts(),t]);x.h=x.h.slice(0,60);save()}
+const tot=x=>x.p.reduce((s,p)=>s+p[1],0);
+function rk(){const L=S.filter(x=>tot(x)>0).sort((a,b)=>tot(b)-tot(a)),n=L.length,r={};L.forEach((x,i)=>r[x.id]=i<Math.ceil(n*.2)?'A':i<Math.ceil(n*.5)?'B':'C');return r}
+let RK={};
+const $$=n=>'$'+Math.round(n).toLocaleString('es-CL');
+const lastP=x=>x.p.reduce((m,p)=>p[0]>m?p[0]:m,'');
+const days=d=>Math.floor((Date.now()-new Date(d+'T12:00'))/864e5);
+function sumP(x){if(!x.p.length)return '<div class="mu">Sin compras registradas</div>';const t=x.p.reduce((s,p)=>s+p[1],0),d=days(lastP(x));return `<div class="mu">🛒 ${x.p.length} compras · Total ${$$(t)} · Prom. ${$$(t/x.p.length)} · Última hace ${d} d${d>(+x.fq||30)?' ⚠':''}${x.fq?' · 🔁 cada '+x.fq+' d':''}</div>`}
+function card(x){
+ const ns=nums(x.t);
+ const bs=ns.map((n,i)=>ok(n)?`<a class="b w" target="_blank" rel="noopener" data-a="wa" data-id="${x.id}" data-n="${n}" href="https://wa.me/${wa(n)}?text=${encodeURIComponent('Hola, buen día.')}">WhatsApp${ns.length>1?' '+(i+1):''}</a><a class="b" href="tel:+${wa(n)}">📞</a>`:`<span class="warn">⚠ Número incompleto: ${n}</span>`).join('');
+ const seg=x.f?`<span class="tag" style="${x.f<=today()?'color:var(--rd);border-color:var(--rd)':''}">📅 ${fmt(x.f)}</span>`:'';
+ return `<div class="card"><div class="top"><div><div class="nm">${esc(x.n)}</div><div class="rut">${esc(x.r)}${x.r&&x.t?' · ':''}${esc(x.t)}</div></div><div style="text-align:right"><span class="tag">${CATS[x.c]||''}${RK[x.id]?' · '+RK[x.id]:''}</span><br>${seg}</div></div>
+ ${x.o?`<div class="nt">${esc(x.o)}</div>`:''}${x.l?`<div class="mu">Último contacto: ${fmt(x.l)}</div>`:''}${sumP(x)}
+ <div class="row">${bs}<button class="b p" data-a="ai" data-id="${x.id}">🤖 Analizar</button><button class="b" data-a="ed" data-id="${x.id}">✏️ Editar</button></div></div>`}
+function renderCl(){
+ const L=S.filter(x=>(cat=='all'||(cat=='seg'?x.f&&x.f<=today():cat=='inact'?x.p.length&&days(lastP(x))>30:cat=='rk'?tot(x)>0:x.c==cat))&&(!q||norm([x.n,x.r,x.t,x.o].join(' ')).includes(q))).sort((a,b)=>cat=='rk'?tot(b)-tot(a):a.n.localeCompare(b.n,'es'));
+ $('#cnt').textContent=L.length+' de '+S.length;const m=today().slice(0,7);let T=0,M=0;S.forEach(x=>x.p.forEach(p=>{T+=p[1];if(p[0].startsWith(m))M+=p[1]}));$('#st').textContent='Ventas registradas: '+$$(T)+' · Este mes: '+$$(M);
+ $('#list').innerHTML=L.map(card).join('')||'<p class="em">Sin resultados. ¿Primera vez? Toca Respaldo y luego Restaurar desde archivo .json</p>';
+ $('#chips').innerHTML=[['all','Todos'],['seg','📅 Seguimiento'],['inact','⏰ Sin comprar +30d'],['rk','🏆 Ranking'],...Object.entries(CATS)].map(([k,v])=>`<button class="chip${k==cat?' on':''}" data-c="${k}">${v}</button>`).join('')}
+$('#c').innerHTML=Object.entries(CATS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
+$('#q').oninput=e=>{q=norm(e.target.value.trim());render()};
+$('#chips').onclick=e=>{const c=e.target.dataset.c;if(c){cat=c;render()}};
+$('#list').onclick=e=>{const a=e.target.closest('[data-a]');if(!a)return;const x=S.find(v=>v.id==a.dataset.id);
+ if(A[a.dataset.a])return A[a.dataset.a](a.dataset,x,a);
+ if(a.dataset.a=='ai'){analizarClienteIA(x);return}
+ else if(a.dataset.a=='ed')openEd(x.id);
+ else{log(x,'Abrió WhatsApp ('+a.dataset.n+')');x.l=today();save();setTimeout(render,400)}};
+function openEd(id){cur=id;armed=false;const x=S.find(v=>v.id==id)||{n:'',r:'',t:'',c:'X',o:'',f:'',h:[]};
+ $('#et').textContent=id?'Editar cliente':'Nuevo cliente';
+ for(const k of['n','r','t','c','o','f','fq'])$('#'+k).value=x[k]||'';
+ $('#dl').style.display=id?'':'none';$('#dl').textContent='Eliminar';
+ $('#hs').innerHTML=x.h.map(h=>`<div class="h"><b>${esc(h[0])}</b> — ${esc(h[1])}</div>`).join('')||'<span class="mu">Sin cambios aún</span>';
+ $('#pd').value=today();$('#ex').style.display=id?'':'none';ex();$('#ed').hidden=false}
+$('#add').onclick=()=>openEd(0);
+$('#cx').onclick=()=>$('#ed').hidden=true;
+$('#sv').onclick=()=>{
+ const v={};for(const k of['n','r','t','c','o','f','fq'])v[k]=$('#'+k).value.trim();
+ if(!v.n)return $('#n').focus();
+ const L={n:'Nombre',r:'RUT',t:'Teléfono',c:'Categoría',o:'Notas',f:'Seguimiento',fq:'Frecuencia (días)'};
+ if(!cur){const x={id:Math.max(0,...S.map(s=>s.id))+1,l:'',p:[],k:[],h:[],...v};log(x,'Cliente creado');S.push(x)}
+ else{const x=S.find(s=>s.id==cur),d=[];
+  for(const k in L)if(x[k]!==v[k]){const f=z=>k=='c'?CATS[z]:z||'—';d.push(`${L[k]}: «${f(x[k])}» → «${f(v[k])}»`)}
+  Object.assign(x,v);if(d.length)log(x,d.join('; '))}
+ save();$('#ed').hidden=true;render()};
+$('#dl').onclick=()=>{if(!armed){armed=true;$('#dl').textContent='¿Seguro? Toca otra vez';return}
+ S=S.filter(s=>s.id!=cur);save();$('#ed').hidden=true;render()};
+$('#bkb').onclick=()=>{$('#bt').value='';$('#bm').textContent='';$('#bk').hidden=false};
+$('#bx').onclick=()=>$('#bk').hidden=true;
+$('#bc').onclick=async()=>{const j=JSON.stringify({c:S,x:X});$('#bt').value=j;$('#bt').select();
+ try{await cp(j);$('#bm').textContent='Copiado ✔'}catch(e){$('#bm').textContent='Copia el texto manualmente'}};
+$('#br').onclick=()=>{try{const o=JSON.parse($('#bt').value),a=Array.isArray(o)?o:o.c;if(!Array.isArray(a)||!a.every(x=>x.n!==undefined))throw 0;if(o.x){X=o.x;sx()}S=a.map(x=>({p:[],k:[],fq:'',...x}));save();render();$('#bm').textContent='Restaurado ✔ ('+a.length+' clientes)'}catch(e){$('#bm').textContent='Respaldo no válido'}};
+function ex(){const x=S.find(v=>v.id==cur);if(!x)return;
+ $('#kl').innerHTML=x.k.filter(t=>!t[2]).map(t=>`<div class="h"><b>${fmt(t[0])}</b> — ${esc(t[1])} <button class="b" data-k="${t[3]}" style="min-height:28px;padding:2px 8px">✓</button></div>`).join('');
+ $('#pl').innerHTML=[...x.p].sort((a,b)=>b[0].localeCompare(a[0])).map(p=>`<div class="h"><b>${p[0].split('-').reverse().join('/')}</b> — ${$$(p[1])} ${esc(p[2])} <button class="b d" data-del="${p[3]}" style="min-height:28px;padding:2px 8px">✕</button></div>`).join('');
+ $('#hs').innerHTML=x.h.map(h=>`<div class="h"><b>${esc(h[0])}</b> — ${esc(h[1])}</div>`).join('')}
+$('#pa').onclick=()=>{const x=S.find(v=>v.id==cur),m=+$('#pm').value,d=$('#pd').value;if(!x||!m||!d)return $('#pm').focus();
+ const t=$('#pt').value.trim();x.p.push([d,m,t,Date.now()]);log(x,'🛒 Compra '+$$(m)+(t?' — '+t:''));if(d>(x.l||''))x.l=d;save();$('#pm').value=$('#pt').value='';ex();render()};
+$('#pl').onclick=e=>{const i=e.target.dataset.del;if(!i)return;const x=S.find(v=>v.id==cur);x.p=x.p.filter(p=>p[3]!=i);log(x,'Compra eliminada');ex();render()};
+$('#ba').onclick=()=>{const x=S.find(v=>v.id==cur),t=$('#bn').value.trim();if(!x||!t)return;log(x,'📝 '+$('#bs').value+': '+t);x.l=today();save();$('#bn').value='';ex();render()};
+$('#bd').onclick=()=>{dl('respaldo_crm_'+today()+'.json','application/json',JSON.stringify({c:S,x:X}));$('#bm').textContent=AND?'Guardado en Descargas ✔':'Si no se descargó, usa Copiar (en la versión en línea las descargas pueden estar bloqueadas)'};
+$('#bf').onchange=e=>{const f=e.target.files[0];if(f)f.text().then(t=>{$('#bt').value=t;$('#br').click()})};
+const A={};let view='cl',ci=0,dr=[],cq=null,cm='Hola {nombre}, buen día 👋 Tenemos estas ofertas:\n';
+const K2='crm_extra_v1';let X=(()=>{try{const s=localStorage.getItem(K2);if(s)return JSON.parse(s)}catch(e){}return{cat:[],ped:[]}})();
+const sx=()=>{try{localStorage.setItem(K2,JSON.stringify(X))}catch(e){}bk()};
+const first=x=>nums(x.t).find(ok),wl=(n,m)=>'https://wa.me/'+wa(n)+'?text='+encodeURIComponent(m);
+const wb=x=>{const n=first(x);return n?`<a class="b w" target="_blank" rel="noopener" data-a="wa" data-id="${x.id}" data-n="${n}" href="${wl(n,'Hola, buen día.')}">WhatsApp</a>`:'<span class="warn">Sin WhatsApp válido</span>'};
+const ptot=p=>p.l.reduce((s,l)=>s+l[1]*l[2],0);
+const AIK='crm_ai_url_v1';
+function aiUrl(){return (localStorage.getItem(AIK)||'').trim().replace(/\/$/,'')}
+function fmtMoney(n){return '$'+Math.round(Number(n)||0).toLocaleString('es-CL')}
+function resumenCliente(x){
+ const compras=x.p.slice().sort((a,b)=>a[0].localeCompare(b[0]));
+ const intervalos=[];for(let i=1;i<compras.length;i++){const a=new Date(compras[i-1][0]+'T12:00'),b=new Date(compras[i][0]+'T12:00');intervalos.push(Math.max(1,Math.round((b-a)/86400000)))}
+ const freq=intervalos.length?Math.round(intervalos.reduce((a,b)=>a+b,0)/intervalos.length):(+x.fq||0);
+ const ticket=compras.length?compras.reduce((a,p)=>a+p[1],0)/compras.length:0;
+ return {id:x.id,nombre:x.n,rut:x.r,telefono:x.t,categoria:CATS[x.c]||x.c,frecuenciaDias:freq,frecuenciaDeclarada:Number(x.fq)||0,ticketPromedio:Math.round(ticket),totalCompras:compras.length,totalHistorico:compras.reduce((a,p)=>a+p[1],0),ultimaCompra:lastP(x),diasDesdeUltimaCompra:lastP(x)?days(lastP(x)):null,productosNotas:x.o||'',historial:compras.slice(-12).map(p=>({fecha:p[0],monto:p[1],detalle:p[2]||''}))};
+}
+async function callAI(payload){
+ const url=aiUrl();if(!url)throw new Error('Configura la URL del servidor de IA en la pestaña 🤖 IA.');
+ const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+ const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Error del servidor IA');return j;
+}
+function aiBox(html){$('#list').innerHTML='<div class="ai-card">'+html+'</div>'}
+async function analizarClienteIA(x){
+ aiBox('<div class="ai-loading">🤖 Analizando historial de '+esc(x.n)+'…</div>');
+ try{const j=await callAI({action:'client',client:resumenCliente(x)});const d=j.result;
+  $('#list').innerHTML=`<div class="card"><div class="ai-title">🤖 Análisis IA · ${esc(x.n)}</div><div class="ai-grid"><div class="ai-stat"><div class="ai-muted">Próxima compra</div><b>${esc(d.proximaCompra)}</b></div><div class="ai-stat"><div class="ai-muted">Probabilidad</div><b>${esc(d.probabilidad)}</b></div><div class="ai-stat"><div class="ai-muted">Ticket estimado</div><b>${fmtMoney(d.ticketEstimado)}</b></div><div class="ai-stat"><div class="ai-muted">Contactar</div><b>${d.contactarAhora?'🔥 AHORA':'⏳ Esperar'}</b></div></div><p>${esc(d.motivo)}</p><div class="ai-muted">Productos probables</div><ul class="ai-list">${d.productosProbables.map(v=>'<li>'+esc(v)+'</li>').join('')||'<li>No hay suficiente detalle</li>'}</ul><div class="row"><button class="b w" data-a="aiwa" data-id="${x.id}">💬 Preparar WhatsApp</button><button class="b" data-a="aiback">← Volver</button></div></div>`;
+ }catch(e){aiBox('<b>❌ No se pudo analizar</b><p class="mu">'+esc(e.message)+'</p><button class="b" data-a="aiback">← Volver</button>')}
+}
+function vIA(){
+ const url=aiUrl();
+ $('#list').innerHTML=`<div class="card"><div class="ai-title">🤖 Inteligencia comercial</div><p class="mu">La IA analiza el historial de compras de tus clientes y estima cuándo conviene volver a contactarlos.</p><label>URL del servidor de IA</label><input id="aiurl" value="${esc(url)}" placeholder="https://tu-proyecto.vercel.app/api/ai"><div class="row"><button class="b p" data-a="aisave">Guardar conexión</button><button class="b" data-a="aitest">Probar IA</button></div><p id="aist" class="mu"></p></div><div class="card"><div class="ai-title">⚡ Tu día de ventas</div><p class="mu">Genera una lista priorizada usando tus clientes con historial de compras.</p><button class="b p" data-a="aiday" style="width:100%;justify-content:center">🚀 Generar mi día</button></div>`;
+}
+async function generarDiaIA(){
+ aiBox('<div class="ai-loading">🤖 Analizando clientes y preparando prioridades…</div>');
+ try{const clientes=S.filter(x=>x.p.length).map(resumenCliente).slice(0,80);const j=await callAI({action:'day',clients:clientes});const rows=j.result.prioridades||[];$('#list').innerHTML='<div class="card"><div class="ai-title">🚀 Tu día de ventas</div><p class="mu">'+esc(j.result.resumen)+'</p>'+rows.map((r,i)=>`<div class="ai-card"><div class="top"><div><b>#${i+1} · ${esc(r.nombre)}</b><div class="ai-muted">${esc(r.accion)}</div></div><div class="ai-score">${r.score}</div></div><p>${esc(r.motivo)}</p><div class="row"><button class="b p" data-a="aiopen" data-id="${r.id}">🤖 Ver análisis</button></div></div>`).join('')+'<button class="b" data-a="aiback">← Volver</button></div>';
+ }catch(e){aiBox('<b>❌ No se pudo generar el día</b><p class="mu">'+esc(e.message)+'</p><button class="b" data-a="aiback">← Volver</button>')}
+}
+A.ai=(d,x)=>analizarClienteIA(x);
+A.aisave=()=>{const u=$('#aiurl').value.trim().replace(/\/$/,'');if(!u)return $('#aist').textContent='Ingresa una URL.';localStorage.setItem(AIK,u);$('#aist').textContent='Conexión guardada ✔'};
+A.aitest=async()=>{const u=$('#aiurl').value.trim();if(u)localStorage.setItem(AIK,u);$('#aist').textContent='Probando…';try{const j=await callAI({action:'ping'});$('#aist').textContent=j.ok?'IA conectada ✔':'Respuesta inesperada'}catch(e){$('#aist').textContent='❌ '+e.message}};
+A.aiday=generarDiaIA;A.aiback=()=>render();A.aiopen=d=>{const x=S.find(v=>v.id==d.id);if(x)analizarClienteIA(x)};
+A.aiwa=d=>{const x=S.find(v=>v.id==d.id);if(!x)return;const msg='Hola, '+x.n.split(/[ \/]/)[0]+'. Estaba revisando tu última compra y quería saber si necesitas reposición. ¿Te envío una cotización?';window.open(wl(first(x),msg),'_blank');log(x,'🤖 WhatsApp preparado por IA');x.l=today();save()};
+function render(){RK=rk();
+ $('#tabs').innerHTML=[['cl','👥 Clientes'],['hoy','✅ Hoy'],['ai','🤖 IA'],['cat','🏷️ Ofertas'],['ped','🧾 Pedidos'],['cam','📣 Campaña']].map(([k,v])=>`<button class="chip${k==view?' on':''}" data-v="${k}">${v}</button>`).join('');
+ ['#q','#chips','#st'].forEach(z=>$(z).style.display=view=='cl'?'':'none');$('#add').style.display=view=='cl'?'':'none';
+ ({cl:renderCl,hoy:vHoy,ai:vIA,cat:vCat,ped:vPed,cam:vCam})[view]()}
+$('#tabs').onclick=e=>{const v=e.target.dataset.v;if(v){view=v;render()}};
+function vHoy(){const t=today(),T=[];S.forEach(x=>x.k.forEach(k=>{if(!k[2])T.push([k,x])}));T.sort((a,b)=>(a[0][0]||'9').localeCompare(b[0][0]||'9'));
+ const RC=S.filter(x=>+x.fq&&x.p.length&&days(lastP(x))>=+x.fq);
+ $('#list').innerHTML='<h3>✅ Pendientes</h3>'+(T.map(([k,x])=>`<div class="card"><div class="top"><div><div class="nm">${esc(x.n)}</div><div class="nt">${esc(k[1])}</div></div><span class="tag" style="${k[0]&&k[0]<=t?'color:var(--rd);border-color:var(--rd)':''}">${k[0]?'📅 '+fmt(k[0]):'sin fecha'}</span></div><div class="row">${wb(x)}<button class="b p" data-a="kd" data-id="${x.id}" data-k="${k[3]}">✓ Hecho</button></div></div>`).join('')||'<p class="mu">Nada pendiente 🎉</p>')
+ +'<h3>🔁 Toca recompra</h3>'+(RC.map(x=>`<div class="card"><div class="nm">${esc(x.n)}</div><div class="mu">Compra cada ${x.fq} d · última hace ${days(lastP(x))} d</div><div class="row">${wb(x)}</div></div>`).join('')||'<p class="mu">Ningún cliente atrasado según su frecuencia</p>')}
+A.kd=(d,x)=>{const k=x.k.find(v=>v[3]==d.k);k[2]=1;log(x,'✅ Hecho: '+k[1]);render()};
+function vCat(){$('#list').innerHTML=`<div class="card"><input id="cn" placeholder="Producto (ej. Papel higiénico 4x500)"><div class="row"><input id="cp" type="number" inputmode="numeric" placeholder="Precio $" style="flex:1 1 100px"><input id="co" placeholder="Nota (pallet, corta fecha…)" style="flex:2 1 140px"></div><div class="row"><button class="b p" data-a="cs">Guardar producto</button><button class="b" data-a="imp">📷 Importar lista</button></div></div><div class="row"><button class="b w" data-a="shr">📤 Compartir lista de precios</button></div><input id="cf" value="${esc(cqs)}" placeholder="Buscar en el catálogo (${X.cat.length})" style="margin:8px 0"><div id="cl2"></div>`;cl2()}
+A.cs=()=>{const n=$('#cn').value.trim();if(!n)return $('#cn').focus();const c=X.cat.find(v=>v.i==ci);if(c){const np=+$('#cp').value;if(np!==c.p)(c.hp=c.hp||[]).push([today(),c.p]);c.n=n;c.p=np;c.o=$('#co').value.trim()}else X.cat.push({i:Date.now(),n,p:+$('#cp').value,o:$('#co').value.trim()});ci=0;sx();render()};
+A.cf=d=>{const c=X.cat.find(v=>v.i==d.i);ci=c.i;$('#cn').value=c.n;$('#cp').value=c.p;$('#co').value=c.o;$('#cn').focus()};
+A.cd=d=>{X.cat=X.cat.filter(v=>v.i!=d.i);sx();render()};
+function vPed(){$('#list').innerHTML='<button class="b p" data-a="pn" style="width:100%;justify-content:center">+ Nueva cotización / pedido</button>'+X.ped.slice().reverse().map(p=>{const c=S.find(v=>v.id==p.c),n=c&&first(c);return `<div class="card"><div class="top"><div><div class="nm">${esc(c?c.n:'(cliente eliminado)')}</div><div class="mu">${p.d.split('-').reverse().join('/')} · ${p.e}</div></div><div class="nm">${$$(ptot(p))}</div></div><div class="nt">${p.l.map(l=>l[1]+'× '+esc(l[0])).join(', ')}</div><div class="row">${n?`<a class="b w" target="_blank" rel="noopener" data-a="pw" data-i="${p.i}" href="${wl(n,pmsg(p))}">WhatsApp</a>`:''}${p.e!='Entregado'?`<button class="b p" data-a="pa2" data-i="${p.i}">${p.e=='Cotización'?'→ Pedido':'→ Entregado'}</button>`:''}<button class="b d" data-a="pdel" data-i="${p.i}">✕</button></div></div>`}).join('')}
+function pmsg(p){return `Hola, buen día. Te envío tu ${p.e=='Cotización'?'cotización':'pedido'}:\n`+p.l.map(l=>`• ${l[1]} × ${l[0]} — ${$$(l[1]*l[2])}`).join('\n')+`\nTotal: ${$$(ptot(p))}`}
+A.pw=d=>{const p=X.ped.find(v=>v.i==d.i),c=S.find(v=>v.id==p.c);if(c)log(c,'🧾 Envió '+p.e+' por WhatsApp')};
+A.pdel=d=>{X.ped=X.ped.filter(v=>v.i!=d.i);sx();render()};
+A.pa2=d=>{const p=X.ped.find(v=>v.i==d.i),c=S.find(v=>v.id==p.c);
+ if(p.e=='Cotización')p.e='Pedido';else{p.e='Entregado';if(c){c.p.push([today(),ptot(p),p.l.map(l=>l[1]+'× '+l[0]).join(', '),Date.now()]);log(c,'🛒 Pedido entregado '+$$(ptot(p)));c.l=today()}}
+ sx();save();render()};
+function drw(){$('#ll').innerHTML=dr.map((l,i)=>`<div class="h">${l[1]}× ${esc(l[0])} — ${$$(l[1]*l[2])} <button class="b d" data-d="${i}" style="min-height:28px;padding:2px 8px">✕</button></div>`).join('');$('#lt').textContent='Total: '+$$(dr.reduce((s,l)=>s+l[1]*l[2],0))}
+A.pn=()=>{dr=[];$('#pc').innerHTML=S.slice().sort((a,b)=>a.n.localeCompare(b.n,'es')).map(x=>`<option value="${x.id}">${esc(x.n)}</option>`).join('');$('#dlp').innerHTML=X.cat.map(c=>`<option value="${esc(c.n)}">`).join('');['ln','lq','lp'].forEach(i=>$('#'+i).value='');drw();$('#pe').hidden=false};
+$('#ln').oninput=e=>{const c=X.cat.find(v=>v.n==e.target.value);if(c)$('#lp').value=c.p};
+$('#la').onclick=()=>{const n=$('#ln').value.trim();if(!n)return $('#ln').focus();dr.push([n,+$('#lq').value||1,+$('#lp').value||0]);['ln','lq','lp'].forEach(i=>$('#'+i).value='');drw()};
+$('#ll').onclick=e=>{if(e.target.dataset.d!=null){dr.splice(+e.target.dataset.d,1);drw()}};
+$('#pq').onclick=()=>$('#pe').hidden=true;
+$('#pg').onclick=()=>{if(!dr.length)return $('#ln').focus();X.ped.push({i:Date.now(),c:+$('#pc').value,e:$('#pk').value,d:today(),l:dr});sx();$('#pe').hidden=true;render()};
+function vCam(){if(cq)return qv();
+ $('#list').innerHTML=`<div class="card"><label style="margin-top:0">Mensaje ({nombre} se reemplaza por el nombre del cliente)</label><textarea id="cm" rows="6">${esc(cm)}</textarea><div class="mu" style="margin-top:6px">Insertar oferta del catálogo:</div><div class="row"><button class="b w" data-a="cia">+ Toda la lista de precios</button></div><div class="row">${X.cat.map(c=>`<button class="b" data-a="ci" data-i="${c.i}">+ ${esc(c.n)}</button>`).join('')||'<span class="mu">Agrega productos en 🏷️ Ofertas</span>'}</div><label>🖼️ Imagen de promoción</label><input type="file" id="pf" accept="image/*"><div class="row">${(X.imgs||[]).map((u,i)=>`<img src="${u}" data-a="pis" data-i="${i}" style="width:72px;height:72px;object-fit:cover;border-radius:10px;border:3px solid ${i==pi?'var(--ac)':'var(--bd)'}">`).join('')}</div>${pi>=0?'<div class="row"><button class="b w" data-a="psh">📤 Compartir imagen</button><button class="b d" data-a="pdl">Borrar imagen</button></div>':''}<label>Categoría</label><select id="cc"><option value="">Todas</option>${Object.entries(CATS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select><label>Ranking</label><select id="cr"><option value="">Todos</option><option>A</option><option>B</option><option>C</option></select><button class="b p" data-a="cgo" style="margin-top:10px;width:100%;justify-content:center">Preparar envío</button></div>`}
+A.ci=d=>{const c=X.cat.find(v=>v.i==d.i);$('#cm').value+='• '+c.n+' — '+$$(c.p)+(c.o?' ('+c.o+')':'')+'\n'};
+A.cgo=()=>{cm=$('#cm').value;const c=$('#cc').value,r=$('#cr').value;cq={l:S.filter(x=>(!c||x.c==c)&&(!r||RK[x.id]==r)&&first(x)).map(x=>x.id),i:0};render()};
+function qv(){const x=S.find(v=>v.id==cq.l[cq.i]);
+ if(!x){const n=cq.l.length;cq=null;$('#list').innerHTML=`<div class="card"><div class="nm">✅ Campaña terminada</div><div class="mu">${n} clientes recorridos</div><button class="b p" data-a="cend" style="margin-top:8px">Volver</button></div>`;return}
+ const m=cm.replace(/\{nombre\}/g,x.n.split(/[ \/]/)[0]);
+ $('#list').innerHTML=`<div class="card"><div class="mu">Cliente ${cq.i+1} de ${cq.l.length}</div><div class="nm">${esc(x.n)}</div><div class="nt" style="white-space:pre-wrap">${esc(m)}</div><div class="row"><a class="b w" target="_blank" rel="noopener" data-a="cw" data-id="${x.id}" href="${wl(first(x),m)}">Enviar por WhatsApp</a>${pi>=0?`<button class="b w" data-a="cwi" data-id="${x.id}">Enviar con imagen</button>`:''}<button class="b" data-a="cs2">Omitir ▶</button><button class="b d" data-a="cend">Terminar</button></div></div>`}
+A.cw=(d,x)=>{log(x,'📣 Promo enviada por WhatsApp');x.l=today();save();cq.i++;setTimeout(render,600)};
+A.cs2=()=>{cq.i++;render()};A.cend=()=>{cq=null;render()};
+$('#ka').onclick=()=>{const x=S.find(v=>v.id==cur),t=$('#kt').value.trim();if(!x||!t)return $('#kt').focus();x.k.push([$('#kd').value,t,0,Date.now()]);log(x,'✅ Pendiente: '+t);$('#kt').value='';ex();render()};
+$('#kl').onclick=e=>{const i=e.target.dataset.k;if(!i)return;const x=S.find(v=>v.id==cur),k=x.k.find(v=>v[3]==i);k[2]=1;log(x,'✅ Hecho: '+k[1]);ex();render()};
+function csv(k){RK=rk();const Q=v=>'"'+String(v??'').replace(/"/g,'""')+'"',R=[];
+ if(k=='c'){R.push(['Categoría','RUT','Nombre','Teléfono','Notas','Ranking','Frecuencia (días)','Compras','Total','Última compra','Seguimiento']);S.forEach(x=>R.push([CATS[x.c],x.r,x.n,x.t,x.o,RK[x.id]||'',x.fq,x.p.length,tot(x),lastP(x),x.f]))}
+ else{R.push(['Cliente','Fecha','Monto','Detalle']);S.forEach(x=>x.p.forEach(p=>R.push([x.n,p[0],p[1],p[2]])))}
+ const t='\ufeff'+R.map(r=>r.map(Q).join(';')).join('\r\n');$('#bt').value=t;
+ try{dl((k=='c'?'clientes_':'compras_')+today()+'.csv','text/csv',t)}catch(e){}
+ try{if(!AND)navigator.clipboard.writeText(t)}catch(e){}
+ $('#bm').textContent=AND?'CSV guardado en Descargas ✔':'CSV descargado (o copiado: pégalo en Excel/Sheets)'}
+$('#c1').onclick=()=>csv('c');$('#c2').onclick=()=>csv('p');
+const num=s=>+s.replace(/[.,](?=\d{3}(?!\d))/g,'').replace(/\D/g,'');
+function px(l){let m=[...l.matchAll(/\$\s*(\d[\d.,]*)/g)];if(!m.length)m=[...l.matchAll(/(?<![\dx×])(\d{1,3}(?:[.,]\d{3})+|\d{3,6})(?!\d|\s*(?:x|×|g\b|gr\b|kg\b|ml\b|cc\b|l\b|lt\b|un\b))/gi)];
+ if(!m.length)return null;const x=m[m.length-1];return{p:num(x[1]),n:l.replace(x[0],' ')}}
+const cl=s=>s.replace(/\s+/g,' ').replace(/[\s\-–—:.·|…$=]+$/,'').replace(/^[\s•\-–*·>]+/,'').trim();
+function parse(t){const R=[];let pend='',sec='';
+ const hd=()=>{if(pend&&!/[a-záéíóúñ]/.test(pend)&&pend.length<40)sec=cl(pend)};
+ t.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).forEach(l=>{const r=px(l);
+  if(r&&r.p>=50){const n=cl(r.n);if(n.length>1){hd();R.push({n,p:r.p,s:sec})}else if(pend)R.push({n:cl(pend),p:r.p,s:sec});pend=''}
+  else{hd();pend=l}});
+ return R}
+let IM=[],cqs='',pi=-1;
+const rz=(f,m,q)=>new Promise(o=>{const i=new Image();i.onload=()=>{const k=Math.min(1,m/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=i.width*k;c.height=i.height*k;c.getContext('2d').drawImage(i,0,0,c.width,c.height);o(c.toDataURL('image/jpeg',q))};i.src=URL.createObjectURL(f)});
+$('#if').onchange=async e=>{const f=e.target.files[0];if(!f)return;if(!AND||!AND.ocr){$('#ir').innerHTML='<p class="mu">Leer fotos solo funciona en la app instalada.</p>';return}$('#ir').innerHTML='<p class="mu">Leyendo la imagen…</p>';AND.ocr(await rz(f,2000,.9))};
+window.onOcr=t=>{$('#it').value=t;$('#ia').click()};
+const shImg=(m,ph)=>{if(AND&&AND.shareImage)AND.shareImage(X.imgs[pi],m,ph||'');else alert('Compartir imágenes funciona en la app instalada.')};
+$('#list').addEventListener('change',async e=>{if(e.target.id!='pf'||!e.target.files[0])return;cm=$('#cm').value;(X.imgs=X.imgs||[]).push(await rz(e.target.files[0],1280,.8));pi=X.imgs.length-1;sx();render()});
+A.pis=d=>{cm=$('#cm').value;pi=pi==+d.i?-1:+d.i;render()};
+A.psh=()=>{cm=$('#cm').value;shImg(cm)};
+A.pdl=()=>{X.imgs.splice(pi,1);pi=-1;sx();render()};
+A.cwi=(d,x)=>{shImg(cm.replace(/\{nombre\}/g,x.n.split(/[ \/]/)[0]),wa(first(x)));log(x,'📣 Promo con imagen enviada');x.l=today();save();cq.i++;setTimeout(render,600)};
+function cl2(){const L=X.cat.filter(c=>!cqs||norm(c.n+' '+(c.o||'')+' '+(c.s||'')).includes(cqs)).sort((a,b)=>a.n.localeCompare(b.n,'es'));
+ $('#cl2').innerHTML=L.map(c=>{const h=(c.hp||[]).slice(-1)[0];return `<div class="card"><div class="top"><div><div class="nm">${esc(c.n)}</div><div class="mu">${esc([c.s,c.o].filter(Boolean).join(' · '))}${h?' · antes '+$$(h[1])+' ('+fmt(h[0])+')':''}</div></div><div class="nm">${$$(c.p)}</div></div><div class="row"><button class="b" data-a="cf" data-i="${c.i}">✏️ Editar</button><button class="b d" data-a="cd" data-i="${c.i}">✕</button></div></div>`}).join('')||'<p class="em">Agrega productos o importa una lista</p>'}
+$('#list').addEventListener('input',e=>{if(e.target.id=='cf'){cqs=norm(e.target.value.trim());cl2()}});
+function listTxt(){const L=X.cat.slice().sort((a,b)=>(a.s||'').localeCompare(b.s||'','es')||a.n.localeCompare(b.n,'es'));let t='',g=null;
+ L.forEach(c=>{if((c.s||'')!==g){g=c.s||'';t+=(t?'\n':'')+(g?'*'+g+'*\n':'')}t+='• '+c.n+' — '+$$(c.p)+(c.o?' ('+c.o+')':'')+'\n'});return t}
+A.imp=()=>{$('#im').hidden=false};
+$('#ix').onclick=()=>$('#im').hidden=true;
+$('#ia').onclick=()=>{IM=parse($('#it').value);
+ $('#ir').innerHTML=IM.length?IM.map(r=>{const e=X.cat.find(c=>norm(c.n)==norm(r.n));return `<div class="h rw"><label class="mu" style="display:flex;gap:6px;align-items:center;margin:0"><input type="checkbox" checked style="width:auto">${e?'Actualiza (antes '+$$(e.p)+')':'Nuevo'}${r.s?' · '+esc(r.s):''}</label><input class="rn" value="${esc(r.n)}" style="margin-top:4px"><input class="rp" type="number" inputmode="numeric" value="${r.p}" style="margin-top:4px"></div>`}).join(''):'<p class="mu">No encontré precios. El texto debe tener líneas como "Producto $1.990".</p>';
+ $('#is').style.display=IM.length?'':'none'};
+$('#is').onclick=()=>{document.querySelectorAll('#ir .rw').forEach((w,i)=>{if(!w.querySelector('input[type=checkbox]').checked)return;
+ const n=w.querySelector('.rn').value.trim(),p=+w.querySelector('.rp').value;if(!n||!p)return;const e=X.cat.find(c=>norm(c.n)==norm(n));
+ if(e){if(e.p!==p)(e.hp=e.hp||[]).push([today(),e.p]);e.p=p;if(IM[i].s)e.s=IM[i].s}else X.cat.push({i:Date.now()+i,n,p,o:'',s:IM[i].s||''})});
+ sx();$('#im').hidden=true;$('#it').value='';$('#ir').innerHTML='';$('#is').style.display='none';render()};
+const lnk=()=>$('#sg').href='https://wa.me/?text='+encodeURIComponent($('#sm').value);
+A.shr=()=>{$('#sm').value='📋 Lista de precios '+fmt(today())+'\n\n'+listTxt();$('#sn').textContent='';lnk();$('#sw').hidden=false};
+$('#sm').oninput=lnk;$('#sx2').onclick=()=>$('#sw').hidden=true;
+$('#sc').onclick=()=>cp($('#sm').value).then(()=>$('#sn').textContent='Copiado ✔').catch(()=>$('#sn').textContent='No se pudo copiar');
+A.cia=()=>{$('#cm').value+=listTxt()};
+render();
+</script></body></html>
